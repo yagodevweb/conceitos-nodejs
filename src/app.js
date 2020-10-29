@@ -7,6 +7,17 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use("/repositories/:id", validateUuid);
+
+function validateUuid(request, response, next) {
+  const { id } = request.params;
+
+  if (!isUuid(id)) {
+    return response.status(400).json({ error: 'Invalid Repository ID.'});
+  }
+
+  next();
+}
 
 const repositories = [];
 
@@ -18,14 +29,12 @@ app.post("/repositories", (request, response) => {
   
   const { title, url, techs } = request.body;
 
-  const likes = 0;
-
   const repository = { 
     id: uuid(),
     title,
     url,
     techs,
-    likes
+    likes: 0
   };
 
   repositories.push(repository);
@@ -79,9 +88,10 @@ app.post("/repositories/:id/like", (request, response) => {
     return response.status(400).json({ error: 'Repository not found'});
   }
 
-  repositories[repositoryIndex].likes += 1;
+  const repository = repositories[repositoryIndex];
+  repository.likes += 1;
 
-  return response.json(repositories[repositoryIndex]);
+  return response.json(repository);
 });
 
 module.exports = app;
